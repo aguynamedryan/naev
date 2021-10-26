@@ -314,8 +314,8 @@ static int safelanes_buildOneTurn (void)
 static void safelanes_initStacks (void)
 {
    safelanes_destroyStacks();
-   safelanes_initStacks_vertex();
-   safelanes_initStacks_faction();
+   safelanes_initStacks_faction(); /* Dependency for vertex. */
+   safelanes_initStacks_vertex(); /* Dependency for edge. */
    safelanes_initStacks_edge();
    safelanes_initStacks_anchor();
 }
@@ -361,7 +361,35 @@ static void safelanes_initStacks_vertex (void)
    array_shrink( &sys_to_first_vertex );
 
    vertex_fmask = calloc( array_size(vertex_stack), sizeof(FactionMask) );
-
+   for (int fi=0; fi<array_size(faction_stack); fi++) {
+      int pntid, sysid;
+      Planet *pnt;
+      const char *sys;
+      const char *fseed = faction_lane_seed( fi );
+      if (fseed==NULL)
+         continue;
+      pnt = planet_get( fseed );
+      if (pnt==NULL) {
+         continue;
+      }
+      sys = planet_getSystem(fseed);
+      if (sys ==NULL) {
+         continue;
+      }
+      sysid  = system_index( system_get(sys) );
+      pntid  = planet_index( pnt );
+      for (int i=0; i<array_size(vertex_stack); i++) {
+         Vertex *v = &vertex_stack[i];
+         if (v->type != VERTEX_PLANET)
+            continue;
+         if (v->system != sysid)
+            continue;
+         if (v->index != pntid)
+            continue;
+         vertex_fmask[i] |= (1<<fi);
+         break;
+      }
+   }
 }
 
 /**
