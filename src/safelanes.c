@@ -687,7 +687,7 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
           * deplete this presence before constructing lal[fi]. This is tricky, so there are assertions below,
           * which can warn us if we fuck this up. */
          lal_base = lal_bases[fi];
-         if (presence_budget[fi][si] <= 0)
+         if (presence_budget[fi][si] <= 0.)
             continue;
          /* We "should" find these DoF's interesting if/when we slice, and will unless we deplete this presence first. */
          lal_bases[fi] += sys_to_first_vertex[1+si] - sys_to_first_vertex[si];
@@ -695,19 +695,19 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
          array_resize( &edgeind_opts, 0 );
          for (int ei=sys_to_first_edge[si]; ei<sys_to_first_edge[1+si]; ei++)
             if (!lane_faction[ei]
-                && presence_budget[fi][si] >= 1 / safelanes_initialConductivity(ei) / faction_stack[fi].lane_length_per_presence
+                && presence_budget[fi][si] >= 1. / safelanes_initialConductivity(ei) / faction_stack[fi].lane_length_per_presence
                 && (lane_fmask[ei] & (1<<fi)))
                array_push_back( &edgeind_opts, ei );
 
          if (array_size(edgeind_opts) == 0) {
-            presence_budget[fi][si] = 0;  /* Nothing to build here! Tell ourselves to stop trying. */
+            presence_budget[fi][si] = 0.;  /* Nothing to build here! Tell ourselves to stop trying. */
             if (lal[fi] == NULL)
                lal_bases[fi] -= sys_to_first_vertex[1+si] - sys_to_first_vertex[si];
             continue;
          }
 
          ei_best = edgeind_opts[0];
-         cost_best = 1 / safelanes_initialConductivity(ei_best) / faction_stack[fi].lane_length_per_presence;
+         cost_best = 1. / safelanes_initialConductivity(ei_best) / faction_stack[fi].lane_length_per_presence;
          cost_cheapest_other = +HUGE_VAL;
          if (array_size(edgeind_opts) > 1) {
             /* There's an actual choice. Search for the best option. Lower is better. */
