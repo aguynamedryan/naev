@@ -377,12 +377,12 @@ static void safelanes_initStacks_vertex (void)
          WARN(_("Faction '%s' has non-existant 'lane_seed=%s!'"), faction_name(fi), fseed);
          continue;
       }
-      sys = planet_getSystem(fseed);
-      if (sys ==NULL) {
+      sys = planet_getSystem( fseed );
+      if (sys==NULL) {
          WARN(_("Faction '%s' has 'lane_seed=%s' that doesn't belong to any system!"), faction_name(fi), fseed);
          continue;
       }
-      ssys   = system_get(sys );
+      ssys   = system_get( sys );
       sysid  = system_index( ssys ); /* It shouldn't segfault here, but if it does, things are FUBAR. */
       pntid  = planet_index( pnt );
       marked = 0;
