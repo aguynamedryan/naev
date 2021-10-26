@@ -310,6 +310,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>170</lane_length_per_presence>
+  <lane_seed>Emperor's Fist</lane_seed>
  </faction>
  <faction>
   <name>Proteron</name>
@@ -333,6 +334,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Sigma Station</lane_seed>
  </faction>
  <faction>
   <name>Frontier</name>
@@ -358,6 +360,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>200</lane_length_per_presence>
+  <lane_seed>The Frontier Council</lane_seed>
  </faction>
  <faction>
   <name>Traders Guild</name>
@@ -403,6 +406,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Kataka</lane_seed>
  </faction>
  <faction>
   <name>Thurion</name>
@@ -484,6 +488,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Dvaered High Command</lane_seed>
  </faction>
  <faction>
   <name>Za'lek</name>
@@ -510,6 +515,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Ruadan Prime</lane_seed>
  </faction>
  <faction>
   <name>Sirius</name>
@@ -537,6 +543,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Mutris</lane_seed>
  </faction>
  <faction>
   <name>Goddard</name>
@@ -563,6 +570,7 @@
    <enemy>Black Lotus</enemy>
   </enemies>
   <lane_length_per_presence>143</lane_length_per_presence>
+  <lane_seed>Zhiru</lane_seed>
  </faction>
  <faction>
   <name>Mercenary</name>
