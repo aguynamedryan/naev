@@ -368,7 +368,6 @@ static void safelanes_initStacks_vertex (void)
       vertex_same[i] = -1;
    for (int i=0; i<array_size(tmp_jump_edges); i++) {
       const int *vi = tmp_jump_edges[i];
-      int vi1 = tmp_jump_edges[i][1];
       vertex_same[vi[0]] = vi[1];
       vertex_same[vi[1]] = vi[0];
    }
@@ -764,9 +763,12 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
          }
 
          if (array_size(edgeind_opts) == 0) {
+            /* TODO: This optimization is no good if factions build outward. Can it be salvaged? */
+#if 0
             presence_budget[fi][si] = 0.;  /* Nothing to build here! Tell ourselves to stop trying. */
             if (lal[fi] == NULL)
                lal_bases[fi] -= sys_to_first_vertex[1+si] - sys_to_first_vertex[si];
+#endif /* 0 */
             continue;
          }
 
@@ -814,7 +816,8 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
          presence_budget[fi][si] -= cost_best;
          if (presence_budget[fi][si] >= cost_cheapest_other)
             turns_next_time++;
-         else {
+         /* TODO: This optimization is no good if factions build outward. Can it be salvaged? */
+         else if (0) {
             presence_budget[fi][si] = 0.; /* Nothing more to do here; tell ourselves. */
             if (lal[fi] == NULL)
                lal_bases[fi] -= sys_to_first_vertex[1+si] - sys_to_first_vertex[si];

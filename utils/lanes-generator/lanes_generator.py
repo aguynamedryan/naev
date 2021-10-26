@@ -345,10 +345,11 @@ def activateBestFact( problem, gl, activated, Lfaction, pres_c, pres_0 ):
                         nactivated += 1
                         break
                     
-                # The faction did not activate anything:
-                # There is no hope in activating anything anymore.
-                if nactivated == prev_nactivated:
-                    pres_c[i][f] = -1
+                # TODO: This optimization is no good if factions build outward. Can it be salvaged?
+                # # The faction did not activate anything:
+                # # There is no hope in activating anything anymore.
+                # if nactivated == prev_nactivated:
+                #     pres_c[i][f] = -1
 
     return nactivated
 
