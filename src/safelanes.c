@@ -365,6 +365,7 @@ static void safelanes_initStacks_vertex (void)
       int pntid, sysid, marked;
       Planet *pnt;
       const char *sys;
+      StarSystem *ssys;
       int fi = faction_stack[fii].id;
       const char *fseed = faction_lane_seed( fi );
       if (fseed==NULL) {
@@ -381,7 +382,8 @@ static void safelanes_initStacks_vertex (void)
          WARN(_("Faction '%s' has 'lane_seed=%s' that doesn't belong to any system!"), faction_name(fi), fseed);
          continue;
       }
-      sysid  = system_index( system_get(sys) ); /* It shouldn't segfault here, but if it does, things are FUBAR. */
+      ssys   = system_get(sys );
+      sysid  = system_index( ssys ); /* It shouldn't segfault here, but if it does, things are FUBAR. */
       pntid  = planet_index( pnt );
       marked = 0;
       for (int i=0; i<array_size(vertex_stack); i++) {
@@ -390,7 +392,7 @@ static void safelanes_initStacks_vertex (void)
             continue;
          if (v->system != sysid)
             continue;
-         if (v->index != pntid)
+         if (ssys->planets[v->index]->id != pntid)
             continue;
          vertex_fmask[i] |= (1<<fi);
          marked = 1;
