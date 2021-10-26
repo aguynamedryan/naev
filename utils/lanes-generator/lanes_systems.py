@@ -8,7 +8,7 @@ import xml.etree.ElementTree as ET
 
 
 Asset = namedtuple('Asset', 'x y presences')
-Faction = namedtuple('Faction', 'generators invisible lane_length_per_presence useshiddenjumps')
+Faction = namedtuple('Faction', 'generators invisible lane_length_per_presence lane_seed useshiddenjumps')
 FactionPresence = namedtuple('FactionPresence', 'facname presence')
 Generator = namedtuple('Generator', 'faction weight')
 
@@ -44,6 +44,7 @@ def readFactions(path):
             [Generator(gen.text, float(gen.attrib['weight'])) for gen in elem.findall('generator')],
             bool(elem.find('invisible')),
             float(elem.findtext('lane_length_per_presence', 0)),
+            elem.findtext('lane_seed'),
             bool(elem.find('useshiddenjumps')),
         )
     return {n: f for n, f in full.items() if f.lane_length_per_presence and not f.invisible}
@@ -90,6 +91,7 @@ class Systems:
         facinfo = readFactions( '../../dat/faction.xml' )
 
         self.facnames = list(facinfo)
+        self.facseeds = [None for _ in facinfo]  # global index of each faction's lane_seed
         self.dist_per_presence = {i: facinfo[facname].lane_length_per_presence for i, facname in enumerate(self.facnames)}
         factions = {name: i for (i, name) in enumerate(self.facnames)}
 
@@ -146,6 +148,9 @@ class Systems:
                 asname = pnt.text
                 info = assets[asname]
                 assert len(info.presences) <= 1, f'Real asset {asname} unexpectedly has multiple presence elements.'
+                for fname, finfo in facinfo.items():
+                    if asname == finfo.lane_seed:
+                        self.facseeds[factions[fname]] = nglob
                 for facname, facpres in info.presences:
                     if not facpres:
                         continue
