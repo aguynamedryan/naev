@@ -43,9 +43,9 @@
 /*
  * Global parameters.
  */
-static const double ALPHA                  = 9;         /**< Lane efficiency parameter. */
+static const double ALPHA                  = 9.;        /**< Lane efficiency parameter. */
 static const double JUMP_CONDUCTIVITY      = 0.001;     /**< Conductivity value for inter-system jump-point connections. */
-static const double MIN_ANGLE              = M_PI/18;   /**< Path triangles can't be more acute. */
+static const double MIN_ANGLE              = M_PI/18.;  /**< Path triangles can't be more acute. */
 enum {
    STORAGE_MODE_LOWER_TRIANGULAR_PART = -1,             /**< A CHOLMOD "stype" value: matrix is interpreted as symmetric. */
    STORAGE_MODE_UNSYMMETRIC           = 0,              /**< A CHOLMOD "stype" value: matrix holds whatever we put in it. */
@@ -89,6 +89,7 @@ static const FactionMask MASK_0 = 0, MASK_1 = 1;
 static cholmod_common C;        /**< Parameter settings, statistics, and workspace used internally by CHOLMOD. */
 static Vertex *vertex_stack;    /**< Array (array.h): Everything eligible to be a lane endpoint. */
 static FactionMask *vertex_fmask;/**< Per vertex, the set of factions that have built on it. */
+static int *vertex_same;        /**< Per vertex, represents which vertex it is connected to if that is the case or -1 if not connected. */
 static int *sys_to_first_vertex;/**< Array (array.h): For each system index, the id of its first vertex, + sentinel. */
 static Edge *edge_stack;        /**< Array (array.h): Everything eligible to be a lane. */
 static int *sys_to_first_edge;  /**< Array (array.h): For each system index, the id of its first edge, + sentinel. */
@@ -338,7 +339,8 @@ static void safelanes_initStacks_vertex (void)
          const Planet *p = systems_stack[system].planets[i];
          if (p->presence.base!=0. || p->presence.bonus!=0.) {
             Vertex v = {.system = system, .type = VERTEX_PLANET, .index = i};
-            array_push_back( &tmp_planet_indices, array_size(vertex_stack) );
+            int n = array_size(vertex_stack);
+            array_push_back( &tmp_planet_indices, n );
             array_push_back( &vertex_stack, v );
          }
       }
@@ -360,6 +362,16 @@ static void safelanes_initStacks_vertex (void)
    }
    array_shrink( &vertex_stack );
    array_shrink( &sys_to_first_vertex );
+
+   vertex_same = malloc( sizeof(int) * array_size(vertex_stack) );
+   for (int i=0; i<array_size(vertex_stack); i++)
+      vertex_same[i] = -1;
+   for (int i=0; i<array_size(tmp_jump_edges); i++) {
+      int e1 = tmp_jump_edges[i][0];
+      int e2 = tmp_jump_edges[i][1];
+      vertex_same[ e1 ] = e2;
+      vertex_same[ e2 ] = e1;
+   }
 
    vertex_fmask = calloc( array_size(vertex_stack), sizeof(FactionMask) );
    for (int fi=0; fi<array_size(faction_stack); fi++) {
@@ -506,6 +518,8 @@ static void safelanes_destroyStacks (void)
    vertex_stack = NULL;
    free( vertex_fmask );
    vertex_fmask = NULL;
+   free( vertex_same );
+   vertex_same = NULL;
    array_free( sys_to_first_vertex );
    sys_to_first_vertex = NULL;
    array_free( edge_stack );
@@ -807,9 +821,15 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
          }
          safelanes_updateConductivity( ei_best );
          lane_faction[ ei_best ] = faction_stack[fi].id;
+
          /* Mark vertices as connected to faction. */
-         vertex_fmask[ edge_stack[ei_best][0] ] |= (MASK_1<<fi);
-         vertex_fmask[ edge_stack[ei_best][1] ] |= (MASK_1<<fi);
+         for (int i=0; i<2; i++) {
+            int vi = edge_stack[ei_best][i];
+            int vs = vertex_same[vi];
+            vertex_fmask[vi] |= (MASK_1<<fi);
+            if (vs >= 0)
+               vertex_fmask[vs] |= (MASK_1<<fi);
+         }
       }
    }
 
