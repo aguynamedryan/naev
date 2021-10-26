@@ -81,13 +81,14 @@ typedef struct Faction_ {
 
 /** @brief A set of lane-building factions, represented as a bitfield. */
 typedef uint32_t FactionMask;
+static const FactionMask MASK_0 = 0, MASK_1 = 1;
 
 /*
  * Global state.
  */
 static cholmod_common C;        /**< Parameter settings, statistics, and workspace used internally by CHOLMOD. */
 static Vertex *vertex_stack;    /**< Array (array.h): Everything eligible to be a lane endpoint. */
-static FactionMask *vertex_fmask;/**< Per vertex, the set of factions that have build on it. */
+static FactionMask *vertex_fmask;/**< Per vertex, the set of factions that have built on it. */
 static int *sys_to_first_vertex;/**< Array (array.h): For each system index, the id of its first vertex, + sentinel. */
 static Edge *edge_stack;        /**< Array (array.h): Everything eligible to be a lane. */
 static int *sys_to_first_edge;  /**< Array (array.h): For each system index, the id of its first edge, + sentinel. */
@@ -361,25 +362,25 @@ static void safelanes_initStacks_vertex (void)
    array_shrink( &sys_to_first_vertex );
 
    vertex_fmask = calloc( array_size(vertex_stack), sizeof(FactionMask) );
-   for (int fii=0; fii<array_size(faction_stack); fii++) {
+   for (int fi=0; fi<array_size(faction_stack); fi++) {
       int pntid, sysid, marked;
       Planet *pnt;
       const char *sys;
       StarSystem *ssys;
-      int fi = faction_stack[fii].id;
-      const char *fseed = faction_lane_seed( fi );
+      int f = faction_stack[fi].id;
+      const char *fseed = faction_lane_seed( f );
       if (fseed==NULL) {
-         WARN(_("Faction '%s' has 'lane_length_per_presence' but no 'lane_seed'!"), faction_name(fi));
+         WARN(_("Faction '%s' has 'lane_length_per_presence' but no 'lane_seed'!"), faction_name(f));
          continue;
       }
       pnt = planet_get( fseed );
       if (pnt==NULL) {
-         WARN(_("Faction '%s' has non-existant 'lane_seed=%s!'"), faction_name(fi), fseed);
+         WARN(_("Faction '%s' has non-existant 'lane_seed=%s!'"), faction_name(f), fseed);
          continue;
       }
       sys = planet_getSystem( fseed );
       if (sys==NULL) {
-         WARN(_("Faction '%s' has 'lane_seed=%s' that doesn't belong to any system!"), faction_name(fi), fseed);
+         WARN(_("Faction '%s' has 'lane_seed=%s' that doesn't belong to any system!"), faction_name(f), fseed);
          continue;
       }
       ssys   = system_get( sys );
@@ -394,12 +395,12 @@ static void safelanes_initStacks_vertex (void)
             continue;
          if (ssys->planets[v->index]->id != pntid)
             continue;
-         vertex_fmask[i] |= (1<<fi);
+         vertex_fmask[i] |= (MASK_1<<fi);
          marked = 1;
          break;
       }
       if (!marked)
-         WARN(_("Faction '%s' has 'lane_seed=%s' that wasn't found in vertex_stack!"), faction_name(fi), fseed);
+         WARN(_("Faction '%s' has 'lane_seed=%s' that wasn't found in vertex_stack!"), faction_name(f), fseed);
    }
 }
 
@@ -742,9 +743,9 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
             int sis = edge_stack[ei][0];
             int sjs = edge_stack[ei][1];
             if (!lane_faction[ei] &&
-                ((vertex_fmask[sis] & (1<<fi)) || (vertex_fmask[sjs] & (1<<fi))) /* Connected to other vertices. */
+                ((vertex_fmask[sis] & (MASK_1<<fi)) || (vertex_fmask[sjs] & (MASK_1<<fi))) /* Connected to other vertices. */
                 && presence_budget[fi][si] >= 1. / safelanes_initialConductivity(ei) / faction_stack[fi].lane_length_per_presence
-                && (lane_fmask[ei] & (1<<fi)))
+                && (lane_fmask[ei] & (MASK_1<<fi)))
                array_push_back( &edgeind_opts, ei );
          }
 
@@ -807,8 +808,8 @@ static int safelanes_activateByGradient( cholmod_dense* Lambda_tilde )
          safelanes_updateConductivity( ei_best );
          lane_faction[ ei_best ] = faction_stack[fi].id;
          /* Mark vertices as connected to faction. */
-         vertex_fmask[ edge_stack[ei_best][0] ] |= (1<<fi);
-         vertex_fmask[ edge_stack[ei_best][1] ] |= (1<<fi);
+         vertex_fmask[ edge_stack[ei_best][0] ] |= (MASK_1<<fi);
+         vertex_fmask[ edge_stack[ei_best][1] ] |= (MASK_1<<fi);
       }
    }
 
@@ -893,14 +894,14 @@ static inline int FACTION_ID_TO_INDEX( int id )
 /** @brief Return a mask matching any faction. */
 static inline FactionMask MASK_ANY_FACTION()
 {
-   return ~(FactionMask)0;
+   return ~MASK_0;
 }
 
 /** @brief A mask giving this faction (NOT faction_stack index) exclusive rights to build, if it's a lane-building faction. */
 static inline FactionMask MASK_ONE_FACTION( int id )
 {
    int ind = FACTION_ID_TO_INDEX( id );
-   return ind>0 ? ((FactionMask)1)<<ind : MASK_ANY_FACTION();
+   return ind>0 ? (MASK_1)<<ind : MASK_ANY_FACTION();
 }
 
 /** @brief A mask with appropriate lane-building rights given one faction ID owning each endpoint. */
