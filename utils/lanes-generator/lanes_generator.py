@@ -103,6 +103,7 @@ class SafeLaneProblem:
         si0 = [] #
         sj0 = [] #
         sv0 = [] # For the construction of the sparse weighted connectivity matrix
+        self.vertex_same = [-1 for _ in systems.g2ass]  # Per vertex, the other side of its jump if applicable else -1
         biconnect = UnionFind(len(systems.sysnames))  # Partitioning of the systems by reversible-jump connectedness.
 
         for i, (jpname, loc2globi, jp2loci, namei) in enumerate(zip(systems.jpnames, systems.loc2globs, systems.jp2locs, systems.sysnames)):
@@ -122,6 +123,8 @@ class SafeLaneProblem:
                 sj0.append(loc2globk[jp2lock[m]]) # 
                 sv0.append(JUMP_CONDUCTIVITY)
                 biconnect.union(i, k)
+                self.vertex_same[si0[-1]] = sj0[-1]
+                self.vertex_same[sj0[-1]] = si0[-1]
 
         # Create anchors to prevent the matrix from being singular
         # Anchors are jumpoints, there is 1 per connected set of systems
@@ -335,6 +338,8 @@ def activateBestFact( problem, gl, activated, Lfaction, pres_c, pres_0 ):
                         for vi in si[k], sj[k]:
                             if f not in vf[vi]:
                                 vf[vi].append(f)
+                                if problem.vertex_same[vi] != -1:
+                                    vf[problem.vertex_same[vi]].append(f)
                         activated[k] = True
                         Lfaction[k] = f
                         nactivated += 1

@@ -367,10 +367,10 @@ static void safelanes_initStacks_vertex (void)
    for (int i=0; i<array_size(vertex_stack); i++)
       vertex_same[i] = -1;
    for (int i=0; i<array_size(tmp_jump_edges); i++) {
-      int e1 = tmp_jump_edges[i][0];
-      int e2 = tmp_jump_edges[i][1];
-      vertex_same[ e1 ] = e2;
-      vertex_same[ e2 ] = e1;
+      const int *vi = tmp_jump_edges[i];
+      int vi1 = tmp_jump_edges[i][1];
+      vertex_same[vi[0]] = vi[1];
+      vertex_same[vi[1]] = vi[0];
    }
 
    vertex_fmask = calloc( array_size(vertex_stack), sizeof(FactionMask) );
