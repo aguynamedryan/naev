@@ -361,23 +361,29 @@ static void safelanes_initStacks_vertex (void)
    array_shrink( &sys_to_first_vertex );
 
    vertex_fmask = calloc( array_size(vertex_stack), sizeof(FactionMask) );
-   for (int fi=0; fi<array_size(faction_stack); fi++) {
-      int pntid, sysid;
+   for (int fii=0; fii<array_size(faction_stack); fii++) {
+      int pntid, sysid, marked;
       Planet *pnt;
       const char *sys;
+      int fi = faction_stack[fii].id;
       const char *fseed = faction_lane_seed( fi );
-      if (fseed==NULL)
+      if (fseed==NULL) {
+         WARN(_("Faction '%s' has 'lane_length_per_presence' but no 'lane_seed'!"), faction_name(fi));
          continue;
+      }
       pnt = planet_get( fseed );
       if (pnt==NULL) {
+         WARN(_("Faction '%s' has non-existant 'lane_seed=%s!'"), faction_name(fi), fseed);
          continue;
       }
       sys = planet_getSystem(fseed);
       if (sys ==NULL) {
+         WARN(_("Faction '%s' has 'lane_seed=%s' that doesn't belong to any system!"), faction_name(fi), fseed);
          continue;
       }
-      sysid  = system_index( system_get(sys) );
+      sysid  = system_index( system_get(sys) ); /* It shouldn't segfault here, but if it does, things are FUBAR. */
       pntid  = planet_index( pnt );
+      marked = 0;
       for (int i=0; i<array_size(vertex_stack); i++) {
          Vertex *v = &vertex_stack[i];
          if (v->type != VERTEX_PLANET)
@@ -387,8 +393,11 @@ static void safelanes_initStacks_vertex (void)
          if (v->index != pntid)
             continue;
          vertex_fmask[i] |= (1<<fi);
+         marked = 1;
          break;
       }
+      if (!marked)
+         WARN(_("Faction '%s' has 'lane_seed=%s' that wasn't found in vertex_stack!"), faction_name(fi), fseed);
    }
 }
 
